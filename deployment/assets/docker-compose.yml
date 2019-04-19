@@ -1,0 +1,54 @@
+# https://www.grzegorowski.com/grafana-with-lets-encrypt-ssl-on-docker/
+version: '2'
+
+services:
+  grafana:
+    image: grafana/grafana:4.6.3
+    container_name: grafana
+    restart: always
+    env_file: grafana.config.env
+    volumes:
+      - ./letsencrypt/certs:/etc/letsencrypt/certs:ro
+      - ./grafana-data:/var/lib/grafana
+
+  influx:
+    image: influxdb:1.4.3 # or any other recent version
+    container_name: influx
+    restart: always
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./letsencrypt/certs:/etc/letsencrypt/certs:ro
+      - ./influx-data:/var/lib/influxdb
+    env_file: influx.config.env
+
+  # Containers below ensures automatic cert creation and renewal
+  nginx:
+    image: jwilder/nginx-proxy:0.6.0
+    container_name: nginx
+    restart: always
+    labels:
+      - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx/html:/usr/share/nginx/html
+      - ./nginx/vhost.d:/etc/nginx/vhost.d
+      - ./letsencrypt/certs:/etc/nginx/certs:ro
+  letsencrypt:
+    image: jrcs/letsencrypt-nginx-proxy-companion:v1.7
+    container_name: letsencrypt
+    restart: always
+    volumes_from:
+      - nginx
+    volumes:
+      - ./letsencrypt/certs:/etc/nginx/certs:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+volumes:
+  influx-data:
+    driver: local
+  grafana-data:
+    driver: local

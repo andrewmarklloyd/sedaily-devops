@@ -48,7 +48,17 @@ node_modules
 .node_repl_history
 
 # .env
-.env
+*.env
 
 # Yarn since we use npm
 yarn.lock
+
+# Deployment
+*.pem
+.terraform
+terraform.tfstate
+terraform.tfstate.backup
+terraform.tfvars
+data_sources/
+grafana-data/
+influx-data/
