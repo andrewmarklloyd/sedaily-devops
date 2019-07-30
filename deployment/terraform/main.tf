@@ -8,18 +8,9 @@ resource "aws_instance" "sedaily" {
   vpc_security_group_ids = ["${aws_security_group.sedaily.id}"]
   subnet_id              = "${aws_subnet.main.id}"
 
+  root_block_device {
+    volume_size = 8
+  }
+
   user_data = "${file("./ec2-user-data.sh")}"
-}
-
-resource "aws_volume_attachment" "sedaily" {
-  provider    = "aws.usw2"
-  device_name = "/dev/sdh"
-  volume_id   = "${aws_ebs_volume.sedaily.id}"
-  instance_id = "${aws_instance.sedaily.id}"
-}
-
-resource "aws_ebs_volume" "sedaily" {
-  provider          = "aws.usw2"
-  availability_zone = "us-west-2a"
-  size              = 8
 }
